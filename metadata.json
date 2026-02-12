@@ -1,0 +1,5 @@
+{
+  "name": "Manufacturing Insight Copilot",
+  "description": "A multi-agent analytics assistant for production and quality data. It automates data ingestion, analysis, knowledge retrieval, and report generation.",
+  "requestFramePermissions": []
+}
