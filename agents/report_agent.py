@@ -15,21 +15,23 @@ def generate_report(client: BaseLLMClient, summary: DataSummary, insights: str, 
         ],
     }
 
-    prompt = f"""
+    system_instruction = """
 你是 ReportAgent（报告智能体）。负责整合最终交付物。
-
+你必须仅使用中文生成 JSON 内容。
+任务: 创建一个包含以下字段的 JSON 对象:
+- technicalReport: 给工程师的详细 Markdown 报告 (中文)。
+- executiveSummary: 给厂长的简明 Markdown 摘要 (中文)。
+- anomalies: 描述与其相关的短字符串列表 (中文)。
+"""
+    prompt = f"""
 输入 (Inputs):
 1. 关键指标 (Key Metrics): {json.dumps(key_metrics)}
 2. 专家洞察 (Expert Insights): {insights}
 3. 知识背景 (Knowledge Context): {knowledge}
-
-任务: 创建一个包含以下字段的 JSON 对象 (内容必须完全是中文):
-- technicalReport: 给工程师的详细 Markdown 报告 (中文)。章节包括：分析方法、关键发现（趋势/异常）、根本原因假设、推荐行动（引用 SOP）。
-- executiveSummary: 给厂长的简明 Markdown 摘要 (中文)。重点关注：良率影响、质量风险、业务决策。（请使用项目符号）。
-- anomalies: 描述与其相关的短字符串列表（中文，例如 "温度漂移 > 5%"）。
 """
     response = client.generate_content(
         prompt=prompt,
+        system_instruction=system_instruction,
         response_mime_type="application/json"
     )
     text = response.text

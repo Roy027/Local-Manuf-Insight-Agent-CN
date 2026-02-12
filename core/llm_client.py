@@ -26,6 +26,7 @@ class BaseLLMClient(ABC):
     def generate_content(
         self, 
         prompt: str, 
+        system_instruction: Optional[str] = None,
         response_mime_type: Optional[str] = None,
         response_schema: Optional[Any] = None
     ) -> LLMResponse:
@@ -55,6 +56,7 @@ class GeminiClient(BaseLLMClient):
     def generate_content(
         self, 
         prompt: str, 
+        system_instruction: Optional[str] = None,
         response_mime_type: Optional[str] = None,
         response_schema: Optional[Any] = None
     ) -> LLMResponse:
@@ -64,7 +66,16 @@ class GeminiClient(BaseLLMClient):
                 response_mime_type=response_mime_type,
                 response_schema=response_schema
             )
-            
+            config.response_schema = response_schema
+        
+        # Note: google-genai client handles system_instruction via model config or separate argument depending on version.
+        # For simplicity in this wrapper, we prepend validation or context if strictly needed, 
+        # but the modern client usually supports it in GenerateContentConfig or method arg.
+        # Let's check if 'system_instruction' is valid for this client version, otherwise prepend.
+        if system_instruction:
+             config = config or types.GenerateContentConfig()
+             config.system_instruction = system_instruction
+
         response = self.client.models.generate_content(
             model=self.model_name,
             contents=prompt,
@@ -86,10 +97,14 @@ class OllamaClient(BaseLLMClient):
     def generate_content(
         self, 
         prompt: str, 
+        system_instruction: Optional[str] = None,
         response_mime_type: Optional[str] = None,
         response_schema: Optional[Any] = None
     ) -> LLMResponse:
-        messages = [{"role": "user", "content": prompt}]
+        messages = []
+        if system_instruction:
+            messages.append({"role": "system", "content": system_instruction})
+        messages.append({"role": "user", "content": prompt})
         
         # Handle JSON mode for Ollama/Qwen
         response_format = None

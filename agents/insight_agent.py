@@ -41,23 +41,20 @@ def _prune_profile(summary: DataSummary, max_cols: int = 15) -> Any:
 
 def generate_insights(client: BaseLLMClient, summary: DataSummary) -> str:
     context = _prune_profile(summary)
-    prompt = f"""
+    system_instruction = """
 你是 InsightAgent（洞察智能体），一位制造业数据分析专家。
-你将获得数据集的统计概况（Statistical Profile）。
-不要请求原始数据。请使用提供的统计数据、趋势和相关性进行分析。
-
+你必须仅使用中文进行回答。
+任务:
+1. 分析 time_profiles 中的趋势。
+2. 解释 top_correlations（强相关性）。
+3. 评估 anomalies（异常）。
+输出:
+提供一份关键技术发现、假设和潜在根本原因的列表。
+任何分析结果都必须用中文表述。
+"""
+    prompt = f"""
 输入数据概况 (Input Data Profile):
 {json.dumps(context, indent=2)}
-
-任务:
-1. 分析 time_profiles 中的趋势。是否存在性能退化？
-2. 解释 top_correlations（强相关性）。它们是否暗示了物理关系（例如：温度 vs 压力）？
-3. 评估 anomalies（异常）。数据集是稳定的还是嘈杂的？
-
-输出:
-请**必须**用中文提供一份关键技术发现、假设和潜在根本原因的列表。
-任何分析结果都**必须**翻译成中文。
-重点关注偏离常态的情况（Deviations from normality）。
 """
-    response = client.generate_content(prompt)
+    response = client.generate_content(prompt, system_instruction=system_instruction)
     return response.text or "No insights generated."
