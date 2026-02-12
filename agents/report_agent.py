@@ -23,10 +23,10 @@ def generate_report(client: BaseLLMClient, summary: DataSummary, insights: str, 
 2. 专家洞察 (Expert Insights): {insights}
 3. 知识背景 (Knowledge Context): {knowledge}
 
-任务: 创建一个包含以下字段的 JSON 对象 (请确保内容为中文):
-- technicalReport: 给工程师的详细 Markdown 报告。章节包括：分析方法、关键发现（趋势/异常）、根本原因假设、推荐行动（引用 SOP）。
-- executiveSummary: 给厂长的简明 Markdown 摘要。重点关注：良率影响、质量风险、业务决策。（请使用项目符号）。
-- anomalies: 描述与其相关的短字符串列表（例如 "温度漂移 > 5%"）。
+任务: 创建一个包含以下字段的 JSON 对象 (内容必须完全是中文):
+- technicalReport: 给工程师的详细 Markdown 报告 (中文)。章节包括：分析方法、关键发现（趋势/异常）、根本原因假设、推荐行动（引用 SOP）。
+- executiveSummary: 给厂长的简明 Markdown 摘要 (中文)。重点关注：良率影响、质量风险、业务决策。（请使用项目符号）。
+- anomalies: 描述与其相关的短字符串列表（中文，例如 "温度漂移 > 5%"）。
 """
     response = client.generate_content(
         prompt=prompt,

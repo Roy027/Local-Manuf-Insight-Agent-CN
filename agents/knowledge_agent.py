@@ -18,8 +18,8 @@ def retrieve_knowledge(client: BaseLLMClient, current_insights: str) -> str:
 {KNOWLEDGE_BASE_SOPS}
 
 输出:
-请用中文提供一组引文和摘录，解释或解决洞察中发现的问题。
-如果洞察与历史案例匹配，请明确提及。
+请**必须**用中文提供一组引文和摘录，解释或解决洞察中发现的问题。
+如果洞察与历史案例匹配，请明确提及。所有解释都**必须**是中文。
 """
     response = client.generate_content(prompt)
     return response.text or "No relevant knowledge found."

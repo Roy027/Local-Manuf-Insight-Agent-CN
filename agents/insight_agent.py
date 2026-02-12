@@ -55,7 +55,8 @@ def generate_insights(client: BaseLLMClient, summary: DataSummary) -> str:
 3. 评估 anomalies（异常）。数据集是稳定的还是嘈杂的？
 
 输出:
-请用中文提供一份关键技术发现、假设和潜在根本原因的列表。
+请**必须**用中文提供一份关键技术发现、假设和潜在根本原因的列表。
+任何分析结果都**必须**翻译成中文。
 重点关注偏离常态的情况（Deviations from normality）。
 """
     response = client.generate_content(prompt)
