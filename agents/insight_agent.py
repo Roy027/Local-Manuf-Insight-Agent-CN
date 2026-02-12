@@ -2,12 +2,13 @@ import json
 from typing import Any
 
 import pandas as pd
-from google import genai
+from core.llm_client import BaseLLMClient
 
 from core.models import DataSummary
 
 
 def _prune_profile(summary: DataSummary, max_cols: int = 15) -> Any:
+    # ... (unchanged)
     numeric_keys = list(summary.numeric_profile.keys())[:max_cols]
     categorical_keys = list(summary.categorical_profile.keys())[:max_cols]
 
@@ -38,7 +39,7 @@ def _prune_profile(summary: DataSummary, max_cols: int = 15) -> Any:
     }
 
 
-def generate_insights(client: genai.Client, summary: DataSummary) -> str:
+def generate_insights(client: BaseLLMClient, summary: DataSummary) -> str:
     context = _prune_profile(summary)
     prompt = f"""
 You are the InsightAgent, an expert in manufacturing data analytics.
@@ -57,8 +58,5 @@ Output:
 Provide a list of key technical findings, hypotheses, and potential root causes.
 Focus on deviations from normality.
 """
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=prompt,
-    )
+    response = client.generate_content(prompt)
     return response.text or "No insights generated."

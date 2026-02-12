@@ -11,7 +11,7 @@ import streamlit as st
 from agents.insight_agent import generate_insights
 from agents.knowledge_agent import retrieve_knowledge
 from agents.report_agent import generate_report
-from core.config import get_api_key, get_client
+from core.config import get_api_key, get_llm_client
 from tools.data_analysis import analyze_dataset, SAMPLE_DATA_CSV
 
 st.set_page_config(
@@ -98,11 +98,12 @@ def render_anomaly_tab(container, df, numeric_cols):
         if not numeric_cols:
             st.info("No numeric columns for anomaly detection.")
             return
+        st.subheader("Flagged Rows (>3σ)")
         std = df[numeric_cols].std(ddof=0).replace(0, np.nan)
         zscores = np.abs((df[numeric_cols] - df[numeric_cols].mean()) / std).fillna(0)
         anomaly_mask = (zscores > 3).any(axis=1)
         anomalies = df[anomaly_mask]
-        st.metric("Flagged Rows (>3σ)", len(anomalies))
+        st.metric("Total Anomalies", len(anomalies))
         if anomalies.empty:
             st.success("No significant anomalies detected.")
             return
@@ -194,29 +195,45 @@ def render_summary_tab(container, summary):
             st.write("Key Correlations to Monitor:")
             for corr in summary.top_correlations[:3]:
                 st.write(f"- {corr.pair[0]} vs {corr.pair[1]}: {corr.pearson:.2f}")
+
 def main():
-    st.title("Manufacturing Insight Copilot")
+    st.title("Manufacturing Insight Copilot (CN Local)")
     st.caption(
-        "Upload production batches, profile the data locally, then let Gemini generate insights, "
-        "link SOP knowledge, and produce technical/executive reports."
+        "Secure local data profiling + Local AI Agents (Ollama) or Gemini."
     )
 
-    # --- API Key ---
-    api_key = st.text_input(
-        "Google API Key (kept local; required for Gemini calls)",
-        value=get_api_key(allow_missing=True),
-        type="password",
-        placeholder="Enter your Google API Key",
-    )
+    # --- LLM Configuration (Sidebar) ---
+    st.sidebar.header("LLM Settings")
+    llm_provider = st.sidebar.selectbox("Model Provider", ["Ollama", "Gemini"])
+    
+    api_key = ""
+    ollama_base_url = "http://localhost:11434/v1"
+    ollama_model = "qwen3:8b"
+
+    if llm_provider == "Gemini":
+        api_key = st.sidebar.text_input(
+            "Google API Key",
+            value=get_api_key(allow_missing=True),
+            type="password",
+        )
+    else:
+        ollama_base_url = st.sidebar.text_input("Ollama Base URL", value="http://localhost:11434/v1")
+        ollama_model = st.sidebar.text_input("Ollama Model", value="qwen3:8b")
+
     client = None
-    if not api_key:
-        st.warning("Enter a Google API Key to enable Gemini calls.", icon="🔑")
+    if llm_provider == "Gemini" and not api_key:
+        st.warning("Enter a Google API Key in the sidebar to enable AI features.", icon="🔑")
     else:
         try:
-            client = get_client(api_key)
+            client = get_llm_client(
+                provider=llm_provider,
+                api_key=api_key,
+                ollama_base_url=ollama_base_url,
+                ollama_model=ollama_model
+            )
         except Exception as exc:
-            st.error(f"Failed to initialize Gemini client: {exc}")
-            return
+            st.error(f"Failed to initialize LLM client: {exc}")
+
     # --- File Upload / Sample Data ---
     st.sidebar.header("Data Source")
     uploaded = st.sidebar.file_uploader("Upload CSV or Excel", type=["csv", "xlsx", "xls"])
