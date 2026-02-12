@@ -44,6 +44,12 @@ def _to_native(val):
 
 def _numeric_stats(values: pd.Series) -> NumericStats:
     arr = values.dropna().to_numpy()
+    if arr.size == 0:
+        return NumericStats(
+            mean=0.0, std=0.0, min=0.0, max=0.0,
+            p01=0.0, p25=0.0, p50=0.0, p75=0.0, p99=0.0,
+            skew=0.0, kurtosis=0.0
+        )
     stats = NumericStats(
         mean=float(arr.mean()),
         std=float(arr.std(ddof=0)),
@@ -121,20 +127,34 @@ def _time_profile(df: pd.DataFrame, index_col: str, numeric_cols: List[str]) -> 
         if col == index_col:
             continue
         values = df[col]
+        # Skip if column is empty or all NaNs
+        if values.dropna().empty:
+            continue
+            
         slope, r2 = _simple_regression(index_values, values)
+        
+        # Calculate change points safely
+        try:
+            diff = values.sub(values.mean()).abs()
+            max_idx = diff.idxmax()
+            if pd.isna(max_idx):
+                raise ValueError("No valid index")
+            
+            change_point = {
+                "index": int(max_idx),
+                "value": _to_native(values.loc[max_idx]),
+                "delta_mean": float(diff.max()),
+            }
+        except (ValueError, TypeError, KeyError):
+            change_point = {"index": 0, "value": 0.0, "delta_mean": 0.0}
+
         metrics[col] = TimeMetricProfile(
             trend={
                 "slope": slope,
                 "r2": r2,
                 "direction": "flat" if abs(slope) < 1e-6 else ("up" if slope > 0 else "down"),
             },
-            change_points=[
-                {
-                    "index": int(values.sub(values.mean()).abs().idxmax()),
-                    "value": _to_native(values.iloc[values.sub(values.mean()).abs().argmax()]),
-                    "delta_mean": float(values.sub(values.mean()).abs().max()),
-                }
-            ],
+            change_points=[change_point],
         )
     return TimeProfile(
         index_column=index_col,
@@ -144,11 +164,21 @@ def _time_profile(df: pd.DataFrame, index_col: str, numeric_cols: List[str]) -> 
 
 
 def _simple_regression(x: pd.Series, y: pd.Series) -> Tuple[float, float]:
-    x_arr = x.to_numpy(dtype=float)
-    y_arr = y.to_numpy(dtype=float)
-    if len(x_arr) != len(y_arr) or len(x_arr) == 0:
+    # Align indices and drop NaNs/Infs
+    data = pd.DataFrame({"x": x, "y": y}).dropna()
+    data = data[~data.isin([np.inf, -np.inf]).any(axis=1)]
+    
+    if len(data) < 2:
         return 0.0, 0.0
-    slope = np.polyfit(x_arr, y_arr, 1)[0]
+        
+    x_arr = data["x"].to_numpy(dtype=float)
+    y_arr = data["y"].to_numpy(dtype=float)
+    
+    try:
+        slope = np.polyfit(x_arr, y_arr, 1)[0]
+    except np.linalg.LinAlgError:
+        return 0.0, 0.0
+        
     y_pred = slope * x_arr + (y_arr.mean() - slope * x_arr.mean())
     ss_tot = ((y_arr - y_arr.mean()) ** 2).sum()
     ss_res = ((y_arr - y_pred) ** 2).sum()
@@ -166,6 +196,12 @@ def analyze_dataset(df: pd.DataFrame, file_name: str) -> DataSummary:
 
     numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
     numeric_cols = [c for c in numeric_cols if c != "id"]
+    # Filter out columns that are all NaN or have no variance (std=0 causes zscore issues)
+    valid_cols = []
+    for c in numeric_cols:
+        if df[c].notna().any() and df[c].std(ddof=0) > 1e-9:
+            valid_cols.append(c)
+    numeric_cols = valid_cols
     categorical_cols = [c for c in df.columns if c not in numeric_cols and c != "id"]
 
     schema = {}
