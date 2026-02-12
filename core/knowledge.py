@@ -1,21 +1,21 @@
 KNOWLEDGE_BASE_SOPS = """
-SOP-101: Temperature Control in Curing Process
-- Optimal range: 145degC - 155degC.
-- Deviation > 5degC for > 10 mins results in brittle fracture risk.
-- Action: Check thermocouple calibration and PID controller gains.
+SOP-101: 固化工艺温度控制
+- 最佳范围: 145°C - 155°C.
+- 偏差 > 5°C 持续 > 10 分钟会导致脆性断裂风险。
+- 行动: 检查热电偶校准和 PID 控制器增益。
 
-SOP-204: Pressure Regulation
-- Target pressure: 4500 PSI.
-- Fluctuations > 10% indicate hydraulic leak or pump cavitation.
-- Correlated with surface pitting defects.
+SOP-204: 压力调节
+- 目标压力: 4500 PSI.
+- 波动 > 10% 表明液压泄漏或泵气蚀。
+- 与表面点蚀缺陷相关。
 
-SOP-305: Shift Handover Protocol
-- Operators must log all yield excursions manually.
-- Sudden drops in yield often correlate with Shift A to Shift B transition due to machine recalibration habits.
-- Action: Standardize calibration offset to 0.0 before shift end.
+SOP-305: 交接班协议
+- 操作员必须手动记录所有良率偏移。
+- 良率突然下降通常与 A 班到 B 班的交接有关，原因是机器重新校准习惯不同。
+- 行动: 在轮班结束前将校准偏差标准化为 0.0。
 
-Historical Case #882:
-- Issue: Batch 45-50 showed high rejection rate.
-- Cause: Raw material lot #992 was contaminated with moisture.
-- Signature: Spike in humidity sensor coupled with lower viscosity.
+历史案例 #882:
+- 问题: 批次 45-50 显示高拒收率。
+- 原因: 原材料批号 #992 受潮污染。
+- 特征: 湿度传感器峰值伴随粘度降低。
 """.strip()

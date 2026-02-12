@@ -42,21 +42,21 @@ def _prune_profile(summary: DataSummary, max_cols: int = 15) -> Any:
 def generate_insights(client: BaseLLMClient, summary: DataSummary) -> str:
     context = _prune_profile(summary)
     prompt = f"""
-You are the InsightAgent, an expert in manufacturing data analytics.
-You are provided with a statistical profile of the dataset.
-Do not request raw data. Use the provided statistics, trends, and correlations.
+你是 InsightAgent（洞察智能体），一位制造业数据分析专家。
+你将获得数据集的统计概况（Statistical Profile）。
+不要请求原始数据。请使用提供的统计数据、趋势和相关性进行分析。
 
-Input Data Profile:
+输入数据概况 (Input Data Profile):
 {json.dumps(context, indent=2)}
 
-Task:
-1. Analyze trends in the time_profiles. Are there degradations?
-2. Interpret top_correlations. Do they indicate physical relationships (e.g. Temp vs Pressure)?
-3. Evaluate anomalies. Is the dataset stable or noisy?
+任务:
+1. 分析 time_profiles 中的趋势。是否存在性能退化？
+2. 解释 top_correlations（强相关性）。它们是否暗示了物理关系（例如：温度 vs 压力）？
+3. 评估 anomalies（异常）。数据集是稳定的还是嘈杂的？
 
-Output:
-Provide a list of key technical findings, hypotheses, and potential root causes.
-Focus on deviations from normality.
+输出:
+请用中文提供一份关键技术发现、假设和潜在根本原因的列表。
+重点关注偏离常态的情况（Deviations from normality）。
 """
     response = client.generate_content(prompt)
     return response.text or "No insights generated."

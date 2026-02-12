@@ -5,21 +5,21 @@ from core.knowledge import KNOWLEDGE_BASE_SOPS
 
 def retrieve_knowledge(client: BaseLLMClient, current_insights: str) -> str:
     prompt = f"""
-You are the KnowledgeAgent. You have access to the company's SOPs and Historical Cases (long-term memory).
+你是 KnowledgeAgent（知识智能体）。你可以访问公司的 SOP 和历史案例（长期记忆）。
 
-Your Task:
-Read the Current Insights and find relevant documents in the Knowledge Base.
-Map specific observed problems to SOPs or past cases.
+你的任务:
+阅读当前的洞察（Current Insights），并在知识库中查找相关文档。
+将观察到的具体问题映射到 SOP 或过往案例。
 
-Current Insights:
+当前洞察 (Current Insights):
 {current_insights}
 
-Knowledge Base:
+知识库 (Knowledge Base):
 {KNOWLEDGE_BASE_SOPS}
 
-Output:
-A set of citations and excerpts that explain or solve the issues found in the insights.
-If an insight matches a Historical Case, explicitly mention it.
+输出:
+请用中文提供一组引文和摘录，解释或解决洞察中发现的问题。
+如果洞察与历史案例匹配，请明确提及。
 """
     response = client.generate_content(prompt)
     return response.text or "No relevant knowledge found."

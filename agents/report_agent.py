@@ -16,17 +16,17 @@ def generate_report(client: BaseLLMClient, summary: DataSummary, insights: str, 
     }
 
     prompt = f"""
-You are the ReportAgent. Synthesize the final deliverables.
+你是 ReportAgent（报告智能体）。负责整合最终交付物。
 
-Inputs:
-1. Key Metrics: {json.dumps(key_metrics)}
-2. Expert Insights: {insights}
-3. Knowledge Context: {knowledge}
+输入 (Inputs):
+1. 关键指标 (Key Metrics): {json.dumps(key_metrics)}
+2. 专家洞察 (Expert Insights): {insights}
+3. 知识背景 (Knowledge Context): {knowledge}
 
-Task: Create a JSON object with:
-- technicalReport: Detailed Markdown for engineers. Sections: Analysis Methodology, Key Findings (Trend/Anomaly), Root Cause Hypothesis, Recommended Actions (citing SOPs).
-- executiveSummary: Concise Markdown for Plant Manager. Focus on: Yield Impact, Quality Risk, Business Decision. (Bullet points).
-- anomalies: A list of short strings describing top detected issues (e.g. "Temp drift > 5%").
+任务: 创建一个包含以下字段的 JSON 对象 (请确保内容为中文):
+- technicalReport: 给工程师的详细 Markdown 报告。章节包括：分析方法、关键发现（趋势/异常）、根本原因假设、推荐行动（引用 SOP）。
+- executiveSummary: 给厂长的简明 Markdown 摘要。重点关注：良率影响、质量风险、业务决策。（请使用项目符号）。
+- anomalies: 描述与其相关的短字符串列表（例如 "温度漂移 > 5%"）。
 """
     response = client.generate_content(
         prompt=prompt,
